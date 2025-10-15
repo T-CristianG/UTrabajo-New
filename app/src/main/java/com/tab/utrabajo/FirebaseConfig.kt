@@ -1,23 +1,29 @@
 package com.tab.utrabajo
 
 import android.content.Context
+import android.util.Log
 import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 
 object FirebaseConfig {
 
-    // 🔹 Instancias de Firebase
-    val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
-    val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
-    val storage: FirebaseStorage by lazy { FirebaseStorage.getInstance() }
+    private const val TAG = "FirebaseConfig"
 
     /**
      * 🔹 Inicializa Firebase en toda la app
      * Llama a esta función una sola vez, normalmente en onCreate() de MainActivity
      */
-    fun init(context: Context) {
-        FirebaseApp.initializeApp(context)
+    fun init(context: Context): Boolean {
+        return try {
+            if (FirebaseApp.getApps(context).isEmpty()) {
+                FirebaseApp.initializeApp(context)
+                Log.d(TAG, "Firebase initialized successfully")
+            } else {
+                Log.d(TAG, "Firebase already initialized")
+            }
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initializing Firebase", e)
+            false
+        }
     }
 }

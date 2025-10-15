@@ -275,25 +275,91 @@ fun LoginScreen(
     onCompanyLogin: () -> Unit,
     onRecoverPassword: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize().padding(20.dp),
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    Column(
+        modifier = Modifier.fillMaxSize().padding(20.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(8.dp))
+
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = Color.Red,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+        }
+
         Text("UT", fontSize = 48.sp, color = Color(0xFF2F90D9))
         Spacer(Modifier.height(16.dp))
-        var username by remember { mutableStateOf("") }
-        var password by remember { mutableStateOf("") }
 
-        OutlinedTextField(value = username, onValueChange = { username = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Nombre de usuario o correo") })
+        OutlinedTextField(
+            value = username,
+            onValueChange = { username = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Correo electrónico *") },
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(value = password, onValueChange = { password = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Contraseña") }, visualTransformation = PasswordVisualTransformation())
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Contraseña *") },
+            visualTransformation = PasswordVisualTransformation(),
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(20.dp))
-        Button(onClick = onStudentLogin, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text("Iniciar Sesión") }
+        Button(
+            onClick = {
+                if (username.isBlank() || password.isBlank()) {
+                    errorMessage = "Por favor complete todos los campos"
+                    return@Button
+                }
+
+                isLoading = true
+                errorMessage = null
+
+                FirebaseRepository.getInstance().loginUser(
+                    email = username.trim(),
+                    password = password,
+                    onSuccess = {
+                        isLoading = false
+                        onStudentLogin()
+                    },
+                    onError = { error ->
+                        isLoading = false
+                        errorMessage = error
+                    }
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                Text("Iniciando sesión...")
+            } else {
+                Text("Iniciar Sesión")
+            }
+        }
         Spacer(Modifier.height(12.dp))
-        Button(onClick = onCompanyLogin, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text("Iniciar sesión - Empresa") }
+        Button(
+            onClick = onCompanyLogin,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text("Iniciar sesión - Empresa")
+        }
         Spacer(Modifier.height(12.dp))
-        TextButton(onClick = onRecoverPassword) { Text("Recuperar contraseña", color = Color(0xFF2F90D9)) }
+        TextButton(onClick = onRecoverPassword) {
+            Text("Recuperar contraseña", color = Color(0xFF2F90D9))
+        }
     }
 }
 
@@ -318,20 +384,57 @@ fun RoleSelectionScreen(onStudent: () -> Unit, onCompany: () -> Unit) {
 
 @Composable
 fun RegisterStudentScreen(onNext: () -> Unit, onBack: () -> Unit) {
+    var fullName by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirm by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
     Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Top) {
         Spacer(Modifier.height(8.dp))
-        var fullName by remember { mutableStateOf("") }
-        var email by remember { mutableStateOf("") }
-        var password by remember { mutableStateOf("") }
-        var confirm by remember { mutableStateOf("") }
 
-        OutlinedTextField(value = fullName, onValueChange = { fullName = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Nombre Completo *") })
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = Color.Red,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+        }
+
+        OutlinedTextField(
+            value = fullName,
+            onValueChange = { fullName = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Nombre Completo *") },
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = email, onValueChange = { email = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Email *") })
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Email *") },
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = password, onValueChange = { password = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Contraseña *") }, visualTransformation = PasswordVisualTransformation())
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Contraseña *") },
+            visualTransformation = PasswordVisualTransformation(),
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = confirm, onValueChange = { confirm = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Confirmar Contraseña *") }, visualTransformation = PasswordVisualTransformation())
+        OutlinedTextField(
+            value = confirm,
+            onValueChange = { confirm = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Confirmar Contraseña *") },
+            visualTransformation = PasswordVisualTransformation(),
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(12.dp))
         Text("Requisitos de contraseña", fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(6.dp))
@@ -340,46 +443,164 @@ fun RegisterStudentScreen(onNext: () -> Unit, onBack: () -> Unit) {
         Text("• Al menos un número")
         Text("• Al menos un símbolo (ej: !, @, #, $)")
         Spacer(Modifier.height(18.dp))
-        Button(onClick = onNext, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text("Continuar") }
+
+        Button(
+            onClick = {
+                // Validaciones
+                if (fullName.isBlank() || email.isBlank() || password.isBlank() || confirm.isBlank()) {
+                    errorMessage = "Por favor complete todos los campos"
+                    return@Button
+                }
+
+                if (password != confirm) {
+                    errorMessage = "Las contraseñas no coinciden"
+                    return@Button
+                }
+
+                if (password.length < 8) {
+                    errorMessage = "La contraseña debe tener al menos 8 caracteres"
+                    return@Button
+                }
+
+                if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    errorMessage = "Por favor ingrese un email válido"
+                    return@Button
+                }
+
+                isLoading = true
+                errorMessage = null
+
+                // SOLO Firebase - NO llamar onNext() aquí
+                FirebaseRepository.getInstance().registerStudent(
+                    email = email.trim(),
+                    password = password,
+                    fullName = fullName.trim(),
+                    onSuccess = {
+                        isLoading = false
+                        onNext()  // ← SOLO AQUÍ se llama onNext()
+                    },
+                    onError = { error ->
+                        isLoading = false
+                        errorMessage = error
+                    }
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                Text("Registrando...")
+            } else {
+                Text("Continuar")
+            }
+        }
     }
 }
 
-
 @Composable
 fun StudentWorkInfoScreen(onNext: () -> Unit, onBack: () -> Unit) {
+    var worksNowState by remember { mutableStateOf(false) }
+    var companyName by remember { mutableStateOf("") }
+    var role by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
     Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Top) {
         Spacer(Modifier.height(8.dp))
+
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = Color.Red,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+        }
+
         Text("¿Trabajas actualmente?", color = Color(0xFF2F90D9), fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(8.dp))
 
-        var worksNowState by remember { mutableStateOf(true) }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            RadioButton(selected = worksNowState, onClick = { worksNowState = true }, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF2F90D9)))
+            RadioButton(
+                selected = worksNowState,
+                onClick = { if (!isLoading) worksNowState = true },
+                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF2F90D9)),
+                enabled = !isLoading
+            )
             Spacer(Modifier.size(8.dp))
             Text("Si", color = Color(0xFF2F90D9))
             Spacer(Modifier.size(16.dp))
-            RadioButton(selected = !worksNowState, onClick = { worksNowState = false }, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF2F90D9)))
+            RadioButton(
+                selected = !worksNowState,
+                onClick = { if (!isLoading) worksNowState = false },
+                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF2F90D9)),
+                enabled = !isLoading
+            )
             Spacer(Modifier.size(8.dp))
             Text("No", color = Color(0xFF2F90D9))
         }
 
         Spacer(Modifier.height(18.dp))
 
-        var companyName by remember { mutableStateOf("") }
-        var role by remember { mutableStateOf("") }
-
         if (worksNowState) {
             Text("Nombre de la empresa", color = Color(0xFF2F90D9))
             Spacer(Modifier.height(6.dp))
-            OutlinedTextField(value = companyName, onValueChange = { companyName = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Nombre de la empresa") })
+            OutlinedTextField(
+                value = companyName,
+                onValueChange = { companyName = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Nombre de la empresa") },
+                enabled = !isLoading
+            )
             Spacer(Modifier.height(12.dp))
             Text("Rol que desempeñas", color = Color(0xFF2F90D9))
             Spacer(Modifier.height(6.dp))
-            OutlinedTextField(value = role, onValueChange = { role = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Rol que desempeñas") })
+            OutlinedTextField(
+                value = role,
+                onValueChange = { role = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Rol que desempeñas") },
+                enabled = !isLoading
+            )
         }
 
         Spacer(Modifier.height(24.dp))
-        Button(onClick = onNext, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text("Continuar") }
+        Button(
+            onClick = {
+                val currentUser = FirebaseRepository.getInstance().getCurrentUser()
+                if (currentUser == null) {
+                    errorMessage = "Usuario no autenticado. Por favor, reinicie el registro."
+                    return@Button
+                }
+
+                isLoading = true
+                errorMessage = null
+
+                FirebaseRepository.getInstance().saveStudentWorkInfo(
+                    userId = currentUser.uid,
+                    worksNow = worksNowState,
+                    companyName = companyName.trim(),
+                    role = role.trim(),
+                    onSuccess = {
+                        isLoading = false
+                        onNext()
+                    },
+                    onError = { error ->
+                        isLoading = false
+                        errorMessage = error
+                    }
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                Text("Guardando...")
+            } else {
+                Text("Continuar")
+            }
+        }
     }
 }
 
@@ -387,9 +608,20 @@ fun StudentWorkInfoScreen(onNext: () -> Unit, onBack: () -> Unit) {
 @Composable
 fun StudentSkillsScreen(onNext: () -> Unit, onBack: () -> Unit) {
     val skills = remember { mutableStateListOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Top) {
         Spacer(Modifier.height(8.dp))
+
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = Color.Red,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+        }
+
         Text("Habilidades", color = Color(0xFF2F90D9), fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(6.dp))
         Text("Mencione o describa habilidades adicionales que tenga.", color = Color(0xFF2F90D9))
@@ -401,19 +633,69 @@ fun StudentSkillsScreen(onNext: () -> Unit, onBack: () -> Unit) {
                     value = skill,
                     onValueChange = { newVal -> skills[index] = newVal },
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    label = { Text("${index + 1}.") }
+                    label = { Text("${index + 1}.") },
+                    enabled = !isLoading
                 )
             }
         }
 
         Spacer(Modifier.height(12.dp))
 
-        Button(onClick = { skills.add("") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F90D9))) {
+        Button(
+            onClick = {
+                if (!isLoading) {
+                    skills.add("")
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F90D9)),
+            enabled = !isLoading
+        ) {
             Text("+ Añadir habilidad", color = Color.White)
         }
 
         Spacer(Modifier.height(24.dp))
-        Button(onClick = onNext, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text("Continuar") }
+        Button(
+            onClick = {
+                val currentUser = FirebaseRepository.getInstance().getCurrentUser()
+                if (currentUser == null) {
+                    errorMessage = "Usuario no autenticado. Por favor, reinicie el registro."
+                    return@Button
+                }
+
+                val habilidadesValidas = skills.filter { it.isNotBlank() }
+                if (habilidadesValidas.isEmpty()) {
+                    errorMessage = "Por favor agregue al menos una habilidad"
+                    return@Button
+                }
+
+                isLoading = true
+                errorMessage = null
+
+                FirebaseRepository.getInstance().saveStudentSkills(
+                    userId = currentUser.uid,
+                    skills = habilidadesValidas,
+                    onSuccess = {
+                        isLoading = false
+                        onNext()
+                    },
+                    onError = { error ->
+                        isLoading = false
+                        errorMessage = error
+                    }
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                Text("Guardando...")
+            } else {
+                Text("Continuar")
+            }
+        }
     }
 }
 
@@ -421,99 +703,403 @@ fun StudentSkillsScreen(onNext: () -> Unit, onBack: () -> Unit) {
 @Composable
 fun StudentUploadCVScreen(onNext: () -> Unit, onBack: () -> Unit) {
     val selectedFileUri = remember { mutableStateOf<Uri?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         selectedFileUri.value = uri
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Top, horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(20.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Spacer(Modifier.height(8.dp))
         Text("Subir HV", fontSize = 20.sp, color = Color(0xFF2F90D9), fontWeight = FontWeight.Medium)
+
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = Color.Red,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+        }
+
         Spacer(Modifier.height(18.dp))
 
-        Box(modifier = Modifier.fillMaxWidth().height(180.dp).background(Color(0xFFEAF4FB), shape = RoundedCornerShape(8.dp)).clickable { launcher.launch("/") }, contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp)
+                .background(Color(0xFFEAF4FB), shape = RoundedCornerShape(8.dp))
+                .clickable {
+                    if (!isLoading) {
+                        launcher.launch("application/pdf")
+                    }
+                },
+            contentAlignment = Alignment.Center
+        ) {
             if (selectedFileUri.value != null) {
-                Text(text = "Archivo seleccionado:\n${selectedFileUri.value}", modifier = Modifier.padding(12.dp), textAlign = TextAlign.Center)
+                Text(
+                    text = "Archivo PDF seleccionado",
+                    modifier = Modifier.padding(12.dp),
+                    textAlign = TextAlign.Center,
+                    color = Color(0xFF2F90D9),
+                    fontWeight = FontWeight.Medium
+                )
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(painter = painterResource(id = android.R.drawable.arrow_up_float), contentDescription = null)
+                    Icon(
+                        painter = painterResource(id = android.R.drawable.ic_menu_upload),
+                        contentDescription = null
+                    )
                     Spacer(Modifier.height(8.dp))
-                    Text("Por favor, adjunte su hoja de vida", color = Color(0xFF2F90D9))
+                    Text("Por favor, adjunte su hoja de vida (PDF)", color = Color(0xFF2F90D9))
                 }
             }
         }
 
         Spacer(Modifier.height(32.dp))
-        Button(onClick = { onNext() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F90D9))) {
-            Text("Finalizar", color = Color.White)
+
+        Button(
+            onClick = {
+                val fileUri = selectedFileUri.value
+                if (fileUri == null) {
+                    errorMessage = "Por favor seleccione un archivo PDF"
+                    return@Button
+                }
+
+                isLoading = true
+
+                val currentUserId = FirebaseRepository.getInstance().getCurrentUser()?.uid
+                if (currentUserId == null) {
+                    errorMessage = "Usuario no autenticado"
+                    isLoading = false
+                    return@Button
+                }
+
+                FirebaseRepository.getInstance().uploadCV(
+                    fileUri = fileUri,
+                    userId = currentUserId,
+                    onSuccess = { downloadUrl ->
+                        isLoading = false
+                        onNext()
+                    },
+                    onError = { error ->
+                        isLoading = false
+                        errorMessage = error
+                    }
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F90D9)),
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                Text("Subiendo...", color = Color.White)
+            } else {
+                Text("Finalizar", color = Color.White)
+            }
         }
     }
 }
 
 
-
 @Composable
 fun RegisterCompanyScreen(onNext: () -> Unit, onBack: () -> Unit) {
+    var nit by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var workers by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
     Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Top) {
         Spacer(Modifier.height(8.dp))
-        CompanyAvatarField()
-        Spacer(Modifier.height(12.dp))
-        var nit by remember { mutableStateOf("") }
-        var phone by remember { mutableStateOf("") }
-        var email by remember { mutableStateOf("") }
-        var workers by remember { mutableStateOf("") }
 
-        OutlinedTextField(value = nit, onValueChange = { nit = it }, modifier = Modifier.fillMaxWidth(), label = { Text("NIT y Nombre de la empresa") })
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = Color.Red,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+        }
+
+        CompanyAvatarField(enabled = !isLoading)
+        Spacer(Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = nit,
+            onValueChange = { nit = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("NIT y Nombre de la empresa *") },
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = phone, onValueChange = { phone = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Número Telefónico de la empresa") })
+        OutlinedTextField(
+            value = phone,
+            onValueChange = { phone = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Número Telefónico de la empresa *") },
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = email, onValueChange = { email = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Correo de la empresa") })
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Correo de la empresa *") },
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = workers, onValueChange = { workers = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Número de trabajadores") })
+        OutlinedTextField(
+            value = workers,
+            onValueChange = { workers = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Número de trabajadores *") },
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(16.dp))
-        Button(onClick = onNext, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text("Siguiente") }
+        Button(
+            onClick = {
+                if (nit.isBlank() || phone.isBlank() || email.isBlank() || workers.isBlank()) {
+                    errorMessage = "Por favor complete todos los campos"
+                    return@Button
+                }
+
+                if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    errorMessage = "Por favor ingrese un email válido"
+                    return@Button
+                }
+
+                isLoading = true
+                errorMessage = null
+
+                FirebaseRepository.getInstance().registerCompany(
+                    nit = nit.trim(),
+                    phone = phone.trim(),
+                    email = email.trim(),
+                    workers = workers.trim(),
+                    onSuccess = {
+                        isLoading = false
+                        onNext()
+                    },
+                    onError = { error ->
+                        isLoading = false
+                        errorMessage = error
+                    }
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                Text("Registrando...")
+            } else {
+                Text("Siguiente")
+            }
+        }
     }
 }
 
 @Composable
 fun CompanyRepresentativeScreen(onNext: () -> Unit, onBack: () -> Unit) {
+    var repName by remember { mutableStateOf("") }
+    var docType by remember { mutableStateOf("") }
+    var docNumber by remember { mutableStateOf("") }
+    var docUri by remember { mutableStateOf<Uri?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val docLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        docUri = uri
+    }
+
     Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Top) {
         Spacer(Modifier.height(8.dp))
+
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = Color.Red,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+        }
+
         Text("Nombre del representante legal.", color = Color(0xFF2F90D9))
         Spacer(Modifier.height(8.dp))
 
-        var repName by remember { mutableStateOf("") }
-        var docType by remember { mutableStateOf("") }
-        var docNumber by remember { mutableStateOf("") }
-
-        OutlinedTextField(value = repName, onValueChange = { repName = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Nombre del representante legal") })
+        OutlinedTextField(
+            value = repName,
+            onValueChange = { repName = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Nombre del representante legal *") },
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = docType, onValueChange = { docType = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Tipo de documento") })
+        OutlinedTextField(
+            value = docType,
+            onValueChange = { docType = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Tipo de documento *") },
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = docNumber, onValueChange = { docNumber = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Número de documento") })
+        OutlinedTextField(
+            value = docNumber,
+            onValueChange = { docNumber = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Número de documento *") },
+            enabled = !isLoading
+        )
         Spacer(Modifier.height(12.dp))
         Text("Suba copia del documento del representante legal.", color = Color(0xFF2F90D9))
         Spacer(Modifier.height(12.dp))
-        SingleDocumentUploadField(label = "Por favor, adjunte copia del documento")
+
+        SingleDocumentUploadField(
+            label = "Por favor, adjunte copia del documento",
+            selectedFileUri = docUri,
+            onFileSelected = { if (!isLoading) docLauncher.launch("application/pdf") }
+        )
+
         Spacer(Modifier.height(18.dp))
-        Button(onClick = onNext, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text("Siguiente") }
+        Button(
+            onClick = {
+                if (repName.isBlank() || docType.isBlank() || docNumber.isBlank()) {
+                    errorMessage = "Por favor complete todos los campos"
+                    return@Button
+                }
+
+                if (docUri == null) {
+                    errorMessage = "Por favor adjunte el documento del representante"
+                    return@Button
+                }
+
+                val currentUser = FirebaseRepository.getInstance().getCurrentUser()
+                if (currentUser == null) {
+                    errorMessage = "Empresa no registrada. Por favor, reinicie el proceso."
+                    return@Button
+                }
+
+                isLoading = true
+                errorMessage = null
+
+                FirebaseRepository.getInstance().saveCompanyRepresentative(
+                    userId = currentUser.uid,
+                    repName = repName.trim(),
+                    docType = docType.trim(),
+                    docNumber = docNumber.trim(),
+                    docUri = docUri!!,
+                    onSuccess = {
+                        isLoading = false
+                        onNext()
+                    },
+                    onError = { error ->
+                        isLoading = false
+                        errorMessage = error
+                    }
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                Text("Guardando...")
+            } else {
+                Text("Siguiente")
+            }
+        }
     }
 }
 
 @Composable
 fun CompanyDocumentsUploadScreen(onNext: () -> Unit, onBack: () -> Unit) {
+    var rutUri by remember { mutableStateOf<Uri?>(null) }
+    var camaraComercioUri by remember { mutableStateOf<Uri?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val rutLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        rutUri = uri
+    }
+    val camaraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        camaraComercioUri = uri
+    }
+
     Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Top) {
         Spacer(Modifier.height(8.dp))
+
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = Color.Red,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+        }
+
         Text("En este módulo, por favor, adjunte los documentos solicitados.", color = Color(0xFF2F90D9), fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(16.dp))
         Text("Suba copia del RUT.", color = Color(0xFF2F90D9))
         Spacer(Modifier.height(8.dp))
-        SingleDocumentUploadField(label = "Por favor, adjunte copia del RUT.")
+
+        SingleDocumentUploadField(
+            label = "Por favor, adjunte copia del RUT.",
+            selectedFileUri = rutUri,
+            onFileSelected = { if (!isLoading) rutLauncher.launch("application/pdf") }
+        )
+
         Spacer(Modifier.height(16.dp))
         Text("Suba copia de la Cámara de Comercio.", color = Color(0xFF2F90D9))
         Spacer(Modifier.height(8.dp))
-        SingleDocumentUploadField(label = "Por favor, adjunte copia de la Cámara de Comercio.")
+
+        SingleDocumentUploadField(
+            label = "Por favor, adjunte copia de la Cámara de Comercio.",
+            selectedFileUri = camaraComercioUri,
+            onFileSelected = { if (!isLoading) camaraLauncher.launch("application/pdf") }
+        )
+
         Spacer(Modifier.height(24.dp))
-        Button(onClick = onNext, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text("Finalizar") }
+        Button(
+            onClick = {
+                if (rutUri == null || camaraComercioUri == null) {
+                    errorMessage = "Por favor adjunte todos los documentos requeridos"
+                    return@Button
+                }
+
+                val currentUser = FirebaseRepository.getInstance().getCurrentUser()
+                if (currentUser == null) {
+                    errorMessage = "Empresa no registrada. Por favor, reinicie el proceso."
+                    return@Button
+                }
+
+                isLoading = true
+                errorMessage = null
+
+                FirebaseRepository.getInstance().uploadCompanyDocuments(
+                    userId = currentUser.uid,
+                    rutUri = rutUri!!,
+                    camaraComercioUri = camaraComercioUri!!,
+                    onSuccess = {
+                        isLoading = false
+                        onNext()
+                    },
+                    onError = { error ->
+                        isLoading = false
+                        errorMessage = error
+                    }
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                Text("Subiendo documentos...")
+            } else {
+                Text("Finalizar")
+            }
+        }
     }
 }
 
@@ -554,42 +1140,73 @@ fun CompleteCompanyScreen(onSubmit: () -> Unit, onBack: () -> Unit) {
    ------------------------- */
 
 @Composable
-fun CompanyAvatarField() {
+fun CompanyAvatarField(enabled: Boolean = true) {
     var selectedResId by remember { mutableStateOf<Int?>(null) }
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Box(modifier = Modifier.size(120.dp).background(Color(0xFFDCEAF6), shape = CircleShape).clickable {
-            selectedResId = if (selectedResId == android.R.drawable.ic_menu_camera) android.R.drawable.ic_menu_gallery else android.R.drawable.ic_menu_camera
-        }, contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .background(Color(0xFFDCEAF6), shape = CircleShape)
+                .clickable(enabled = enabled) {
+                    selectedResId = if (selectedResId == android.R.drawable.ic_menu_camera)
+                        android.R.drawable.ic_menu_gallery
+                    else
+                        android.R.drawable.ic_menu_camera
+                },
+            contentAlignment = Alignment.Center
+        ) {
             if (selectedResId != null) {
-                Image(painter = painterResource(id = selectedResId!!), contentDescription = "avatar seleccionado", modifier = Modifier.size(72.dp), contentScale = ContentScale.Crop)
+                Image(
+                    painter = painterResource(id = selectedResId!!),
+                    contentDescription = "avatar seleccionado",
+                    modifier = Modifier.size(72.dp),
+                    contentScale = ContentScale.Crop
+                )
             } else {
-                Icon(painter = painterResource(id = android.R.drawable.ic_menu_camera), contentDescription = "avatar", modifier = Modifier.size(56.dp))
+                Icon(
+                    painter = painterResource(id = android.R.drawable.ic_menu_camera),
+                    contentDescription = "avatar",
+                    modifier = Modifier.size(56.dp)
+                )
             }
         }
     }
 }
-
 @Composable
-fun SingleDocumentUploadField(label: String) {
-    var docResId by remember { mutableStateOf<Int?>(null) }
+fun SingleDocumentUploadField(
+    label: String,
+    selectedFileUri: Uri?,
+    onFileSelected: () -> Unit
+) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(modifier = Modifier.fillMaxWidth().height(140.dp).background(Color(0xFFEAF4FB), shape = RoundedCornerShape(8.dp)).clickable {
-            docResId = if (docResId == android.R.drawable.ic_menu_upload) null else android.R.drawable.ic_menu_upload
-        }, contentAlignment = Alignment.Center) {
-            if (docResId != null) {
-                Icon(painter = painterResource(id = docResId!!), contentDescription = "documento cargado")
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp)
+                .background(Color(0xFFEAF4FB), shape = RoundedCornerShape(8.dp))
+                .clickable { onFileSelected() },
+            contentAlignment = Alignment.Center
+        ) {
+            if (selectedFileUri != null) {
+                Text(
+                    text = "Documento seleccionado",
+                    color = Color(0xFF2F90D9),
+                    fontWeight = FontWeight.Medium
+                )
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(painter = painterResource(id = android.R.drawable.ic_menu_upload), contentDescription = "subir")
+                    Icon(
+                        painter = painterResource(id = android.R.drawable.ic_menu_upload),
+                        contentDescription = "subir documento"
+                    )
                     Spacer(Modifier.height(6.dp))
-                    Text(label)
+                    Text(label, color = Color(0xFF2F90D9))
                 }
             }
         }
         Spacer(Modifier.height(8.dp))
     }
 }
-
 /* -------------------------
    Registro completado y recuperar contraseña
    ------------------------- */
