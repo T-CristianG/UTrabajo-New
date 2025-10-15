@@ -60,7 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.ExperimentalComposeUiApi
 import com.tab.utrabajo.ui.theme.UTrabajoTheme
-
+import com.google.firebase.FirebaseApp
 
 // --- Pantallas disponibles ---
 sealed class Screen {
@@ -83,10 +83,15 @@ sealed class Screen {
 }
 
 class MainActivity : ComponentActivity() {
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+
+        FirebaseConfig.init(this)
+
+
         setContent {
             UTrabajoTheme {
                 App()
